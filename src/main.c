@@ -1,0 +1,54 @@
+#include <arpa/inet.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <netinet/in.h> // sockaddr_in, INADDR_ANY
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+#define SERVER_PORT 8080
+
+#define MAX_PENDING_CONNECTIONS 128
+
+int main(void) {
+  int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+
+  if (socket_fd == -1) {
+    perror("socket");
+    return EXIT_FAILURE;
+  }
+
+  int reuse_socket_opt = 1;
+  if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &reuse_socket_opt,
+                 sizeof(reuse_socket_opt)) < 0) {
+    perror("setsockopt");
+    exit(EXIT_FAILURE);
+  }
+
+  struct sockaddr_in server_address;
+  memset(&server_address, 0, sizeof(server_address));
+  server_address.sin_family = AF_INET;
+  server_address.sin_addr.s_addr = INADDR_ANY;
+  server_address.sin_port = htons(SERVER_PORT);
+
+  if (bind(socket_fd, (struct sockaddr *)&server_address,
+           sizeof(server_address)) < 0) {
+    perror("bind");
+    close(socket_fd);
+    exit(EXIT_FAILURE);
+  }
+
+  if (listen(socket_fd, MAX_PENDING_CONNECTIONS) < 0) {
+    perror("listen");
+    close(socket_fd);
+    exit(EXIT_FAILURE);
+  }
+
+  printf("Server is listening on port %d...\n", SERVER_PORT);
+  for (;;) {
+    pause();
+  }
+}
