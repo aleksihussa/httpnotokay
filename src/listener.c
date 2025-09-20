@@ -1,7 +1,7 @@
 #include "../include/listener.h"
 #include <arpa/inet.h>
 #include <fcntl.h>
-#include <netinet/in.h> // sockaddr_in, INADDR_ANY
+#include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -30,6 +30,7 @@ int initialize_listener(int port, int backlog) {
   server_address.sin_addr.s_addr = INADDR_ANY;
   server_address.sin_port = htons(port);
 
+  // Bind the socket to the specified port
   if (bind(socket_fd, (struct sockaddr *)&server_address,
            sizeof(server_address)) < 0) {
     perror("bind");
@@ -37,6 +38,7 @@ int initialize_listener(int port, int backlog) {
     exit(EXIT_FAILURE);
   }
 
+  // Start listening for incoming connections
   if (listen(socket_fd, backlog) < 0) {
     perror("listen");
     close(socket_fd);
